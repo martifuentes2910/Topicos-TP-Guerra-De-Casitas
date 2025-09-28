@@ -1,0 +1,359 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#include <conio.h>
+#include <windows.h>
+
+// Constantes del juego
+#define BOARD_SIZE 8
+#define SCREEN_WIDTH 32
+#define SCREEN_HEIGHT 24
+
+// Variables globales
+int f[BOARD_SIZE][BOARD_SIZE];
+int x = 1, y = 1;
+int suma = 0;
+int balanza = 16;
+int dific, cambio, tiempo, picas;
+int scroll = 0;
+char a[276];
+
+// Funciones auxiliares
+void cls() {
+    system("cls");
+}
+
+void pause(int ms) {
+    Sleep(ms);
+}
+
+int rnd(int max) {
+    return rand() % max;
+}
+
+// Funciones del juego
+void pintarTablero();
+void pintarCursor();
+void cambiarFichas();
+void utilizarPica();
+void mostrarGameOver();
+void mostrarFinalJuego();
+
+int main() {
+    srand(time(NULL));
+    
+    // Inicialización
+    strcpy(a, "                                CODE, GRAPHICS AND 128 MUSIC BY MANUEL GOMEZ ALCAIDE (BARON ASHLER) - THANKS TO BIBOSOFT, NAI, URINDIL, OSCAR RUIZ, IVANZX, JOSE M. CLAROS AND ESTEBAN RUIZ FOR THEIR HELP AND SUPPORT - TO SACRI, WITH LOVE...                                ");
+    
+    // Menú principal
+    while(1) {
+        cls();
+        printf("\n\n        KNIGHTS & DEMONS\n");
+        printf("    A GAME BY KABUTO FACTORY\n\n\n");
+        printf("     SELECT DIFFICULT LEVEL:\n");
+        printf("        1. EASY LEVEL\n");
+        printf("        2. MEDIUM LEVEL\n");
+        printf("        3. HARD LEVEL\n");
+        
+        // Scroll del texto
+        char scrollText[33];
+        strncpy(scrollText, a + scroll, 32);
+        scrollText[32] = '\0';
+        printf("%s\n", scrollText);
+        
+        scroll += 1;
+        if (scroll > 241) scroll = 0;
+        
+        if (kbhit()) {
+            char tecla = getch();
+            if (tecla == '1') { dific = 1; break; }
+            if (tecla == '2') { dific = 2; break; }
+            if (tecla == '3') { dific = 3; break; }
+        }
+        
+        pause(50);
+    }
+    
+    // Configurar dificultad
+    switch(dific) {
+        case 1: cambio = 10; tiempo = 200; picas = 5; break;
+        case 2: cambio = 20; tiempo = 300; picas = 15; break;
+        case 3: cambio = 30; tiempo = 400; picas = 10; break;
+    }
+    
+    // Inicializar variables del juego
+    x = 1; y = 1; suma = 0; balanza = 16;
+    
+    // Bucle principal del juego
+    while(1) {
+        pintarTablero();
+        
+        // Control del tiempo
+        tiempo--;
+        if (tiempo <= 0) {
+            mostrarGameOver();
+            return 0;
+        }
+        
+        // Verificar condiciones de victoria
+        if (suma == 64 || suma == 128) {
+            if (suma == 64) {
+                printf("BOARD CLEAR\n..... ON THE GOOD SIDE\n");
+                balanza--;
+            } else {
+                printf("BOARD CLEAR\n..... ON THE EVIL SIDE\n");
+                balanza++;
+            }
+            
+            suma = 0;
+            x = 1; y = 1;
+            
+            // Resetear tiempo según dificultad
+            switch(dific) {
+                case 1: tiempo = 200; break;
+                case 2: tiempo = 300; break;
+                case 3: tiempo = 400; break;
+            }
+            
+            pause(1000);
+            continue;
+        }
+        
+        // Verificar final del juego
+        if (balanza < 8 || balanza > 23) {
+            mostrarFinalJuego();
+            return 0;
+        }
+        
+        // Mostrar información
+        printf("PIKES: %d\n", picas);
+        printf("TIME: %d\n", tiempo);
+        
+        // Control de entrada
+        if (kbhit()) {
+            char tecla = getch();
+            
+            // Movimiento
+            if ((tecla == 'o' || tecla == '6') && x > 1) {
+                x--;
+                pintarCursor();
+            }
+            else if ((tecla == 'p' || tecla == '7') && x < 8) {
+                x++;
+                pintarCursor();
+            }
+            else if ((tecla == 'q' || tecla == '9') && y > 1) {
+                y--;
+                pintarCursor();
+            }
+            else if ((tecla == 'a' || tecla == '8') && y < 8) {
+                y++;
+                pintarCursor();
+            }
+            // Cambiar fichas
+            else if (tecla == 'm' || tecla == '0') {
+                cambiarFichas();
+            }
+            // Usar pica
+            else if (tecla == 'z' && picas > 0) {
+                utilizarPica();
+                picas--;
+            }
+        }
+        
+        pause(50);
+    }
+    
+    return 0;
+}
+
+void pintarTablero() {
+    cls();
+    
+    // Inicializar tablero
+    for (int r = 0; r < BOARD_SIZE; r++) {
+        for (int c = 0; c < BOARD_SIZE; c++) {
+            f[r][c] = 1;
+            suma += f[r][c];
+        }
+    }
+    
+    // Aplicar cambios según dificultad
+    for (int n = 0; n < cambio; n++) {
+        int r = rnd(BOARD_SIZE);
+        int c = rnd(BOARD_SIZE);
+        
+        // Cambiar ficha actual
+        if (f[r][c] == 1) {
+            f[r][c] = 2;
+            suma += 1;
+        } else {
+            f[r][c] = 1;
+            suma -= 1;
+        }
+        
+        // Cambiar fichas adyacentes
+        if (r > 0) {
+            if (f[r-1][c] == 1) {
+                f[r-1][c] = 2;
+                suma += 1;
+            } else {
+                f[r-1][c] = 1;
+                suma -= 1;
+            }
+        }
+        
+        if (r < BOARD_SIZE-1) {
+            if (f[r+1][c] == 1) {
+                f[r+1][c] = 2;
+                suma += 1;
+            } else {
+                f[r+1][c] = 1;
+                suma -= 1;
+            }
+        }
+        
+        if (c > 0) {
+            if (f[r][c-1] == 1) {
+                f[r][c-1] = 2;
+                suma += 1;
+            } else {
+                f[r][c-1] = 1;
+                suma -= 1;
+            }
+        }
+        
+        if (c < BOARD_SIZE-1) {
+            if (f[r][c+1] == 1) {
+                f[r][c+1] = 2;
+                suma += 1;
+            } else {
+                f[r][c+1] = 1;
+                suma -= 1;
+            }
+        }
+    }
+    
+    // Pintar interfaz (simplificada para consola)
+    printf("======== KNIGHTS & DEMONS ========\n");
+    for (int r = 0; r < BOARD_SIZE; r++) {
+        for (int c = 0; c < BOARD_SIZE; c++) {
+            if (r == y-1 && c == x-1) {
+                printf("[%c]", f[r][c] == 1 ? 'K' : 'D'); // Cursor
+            } else {
+                printf(" %c ", f[r][c] == 1 ? 'K' : 'D'); // Knight o Demon
+            }
+        }
+        printf("\n");
+    }
+    printf("Balanza: %d\n", balanza);
+}
+
+void pintarCursor() {
+    // En esta implementación simplificada, el cursor se maneja en pintarTablero()
+}
+
+void cambiarFichas() {
+    // Cambiar ficha actual
+    if (f[y-1][x-1] == 1) {
+        f[y-1][x-1] = 2;
+        suma += 1;
+    } else {
+        f[y-1][x-1] = 1;
+        suma -= 1;
+    }
+    
+    // Cambiar fichas adyacentes
+    if (y-1 > 0) {
+        if (f[y-2][x-1] == 1) {
+            f[y-2][x-1] = 2;
+            suma += 1;
+        } else {
+            f[y-2][x-1] = 1;
+            suma -= 1;
+        }
+    }
+    
+    if (y-1 < BOARD_SIZE-1) {
+        if (f[y][x-1] == 1) {
+            f[y][x-1] = 2;
+            suma += 1;
+        } else {
+            f[y][x-1] = 1;
+            suma -= 1;
+        }
+    }
+    
+    if (x-1 > 0) {
+        if (f[y-1][x-2] == 1) {
+            f[y-1][x-2] = 2;
+            suma += 1;
+        } else {
+            f[y-1][x-2] = 1;
+            suma -= 1;
+        }
+    }
+    
+    if (x-1 < BOARD_SIZE-1) {
+        if (f[y-1][x] == 1) {
+            f[y-1][x] = 2;
+            suma += 1;
+        } else {
+            f[y-1][x] = 1;
+            suma -= 1;
+        }
+    }
+}
+
+void utilizarPica() {
+    if (f[y-1][x-1] == 1) {
+        f[y-1][x-1] = 2;
+        suma += 1;
+    } else {
+        f[y-1][x-1] = 1;
+        suma -= 1;
+    }
+}
+
+void mostrarGameOver() {
+    cls();
+    printf("======== GAME OVER ========\n");
+    pause(3000);
+}
+
+void mostrarFinalJuego() {
+    cls();
+    
+    if (balanza > 23) {
+        printf("THE EVIL LORD IS LOOKING FOR\n");
+        printf("A PUPIL AND YOU'RE THE BEST\n");
+        printf("CANDIDATE\n");
+    } else if (balanza < 8) {
+        if (dific == 3) {
+            printf("YOU ARE THE NEW LORD OF WAR.\n");
+            printf("YOU'VE MASTERED THE GAME...\n");
+            printf("THANKS FOR PLAYING...\n");
+        } else {
+            printf("BAKELOR IS HAPPY WITH YOU ...\n");
+            printf("BUT THERE IS A LOT OF WORK\n");
+            printf("TO DO....\n");
+        }
+    }
+    
+    pause(5000);
+}
+
+
+------------------------------
+Notas importantes sobre la traducción:
+
+- Simplificación gráfica: El código original usa caracteres específicos del ZX Spectrum ("ab", "cd", "ef", "gh", etc.) que se han reemplazado por caracteres ASCII simples.
+
+- Funciones de sistema: Se usan funciones de Windows/Consola para reemplazar las específicas del Spectrum.
+
+- Temporización: Se usa Sleep() de Windows en lugar de PAUSE del Spectrum.
+
+- Entrada de teclado: Se usa kbhit() y getch() para detectar teclas.
+
+    Sonido y gráficos avanzados: Las llamadas USR para música y efectos se han omitido.
