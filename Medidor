@@ -1,0 +1,31 @@
+PAra el medidor
+Esto en juego.c
+void mostrar_barra_medidor(int valor) {
+    int ancho_total = 20; // tamaño total de la barra
+    int centro = ancho_total / 2;
+
+    printf("Caballeros [");
+    for (int i = 0; i < ancho_total; i++) {
+        if (i == centro) {
+            printf("|"); // punto medio
+        } else if (valor > 0 && i > centro && i <= centro + valor && i < ancho_total) {
+            printf("C"); // ventaja caballeros
+        } else if (valor < 0 && i < centro && i >= centro + valor && i >= 0) {
+            printf("D"); // ventaja demonios
+        } else {
+            printf("-");
+        }
+    }
+    printf("] Demonios");
+
+    if (valor > 0)
+        printf("  (Ventaja Caballeros: +%d)\n", valor);
+    else if (valor < 0)
+        printf("  (Ventaja Demonios: %d)\n", valor);
+    else
+        printf("  (Equilibrado)\n");
+}
+
+esto en la parte que dice "printf("Pikas....")"
+        mostrar_barra_medidor(j->medidor);
+        printf("Pikas: %d\n", j->pikas);
